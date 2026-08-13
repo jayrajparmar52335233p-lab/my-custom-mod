@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "custommod",
+  "version": "1.0.0",
+  "name": "Custom Mod",
+  "description": "Dispenser placement, Bot, and Tree Observer mod",
+  "authors": ["jayrajparmar"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.custommod.CustomMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
