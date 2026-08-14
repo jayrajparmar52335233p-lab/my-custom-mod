@@ -1,4 +1,4 @@
-package com.redcarpet;
+package com.custommod;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -16,8 +16,8 @@ import net.minecraft.util.math.BlockPointer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
-public class RedCarpetMod implements ModInitializer {
-    public static final String MOD_ID = "redcarpet";
+public class CustomMod implements ModInitializer {
+    public static final String MOD_ID = "custommod";
     public static boolean dispenserPlaceBlocks = true;
 
     @Override
@@ -58,7 +58,6 @@ public class RedCarpetMod implements ModInitializer {
                 Direction facing = pointer.state().get(DispenserBlock.FACING);
                 BlockPos targetPos = pointer.pos().offset(facing);
 
-                // यहाँ 1.21.11 के लिए सही तरीका इस्तेमाल किया गया है
                 if (world.getBlockState(targetPos).isAir() && stack.getItem() instanceof BlockItem blockItem) {
                     world.setBlockState(targetPos, blockItem.getBlock().getDefaultState());
                     stack.decrement(1);
