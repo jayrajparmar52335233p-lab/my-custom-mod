@@ -1,25 +1,16 @@
 package com.custommod;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.block.*;
-import net.minecraft.block.dispenser.ItemDispenserBehavior;
-import net.minecraft.command.argument.EntityArgumentType;
-import com.mojang.brigadier.arguments.BoolArgumentType;
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.*;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.block.Block;
+import net.minecraft.block.DispenserBlock;
+import net.minecraft.block.dispenser.DispenserBehavior;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPointer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockView;
 
 public class CustomMod implements ModInitializer {
     public static final String MOD_ID = "custommod";
@@ -31,11 +22,13 @@ public class CustomMod implements ModInitializer {
     }
 
     private void registerDispenserBehaviors() {
-        DispenserBlock.registerBehavior(Items.DIRT, new ItemDispenserBehavior() {
+        DispenserBehavior fallback = DispenserBlock.BEHAVIORS.get(Items.DIRT);
+
+        DispenserBlock.registerBehavior(Items.DIRT, new DispenserBehavior() {
             @Override
-            public ItemStack dispenseSilently(BlockPointer pointer, ItemStack stack) {
+            public ItemStack dispense(BlockPointer pointer, ItemStack stack) {
                 if (!dispenserPlaceBlocks) {
-                    return super.dispenseSilently(pointer, stack);
+                    return fallback != null ? fallback.dispense(pointer, stack) : stack;
                 }
                 ServerWorld world = pointer.world();
                 Direction facing = pointer.state().get(DispenserBlock.FACING);
@@ -46,8 +39,8 @@ public class CustomMod implements ModInitializer {
                     stack.decrement(1);
                     return stack;
                 }
-                return super.dispenseSilently(pointer, stack);
+                return fallback != null ? fallback.dispense(pointer, stack) : stack;
             }
         });
     }
-}
+                    }
