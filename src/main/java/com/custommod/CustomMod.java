@@ -1,9 +1,8 @@
 package com.custommod;
 
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.block.Block;
 import net.minecraft.block.DispenserBlock;
-import net.minecraft.block.dispenser.DispenserBehavior;
+import net.minecraft.block.dispenser.ItemDispenserBehavior;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -14,7 +13,6 @@ import net.minecraft.util.math.Direction;
 
 public class CustomMod implements ModInitializer {
     public static final String MOD_ID = "custommod";
-    public static boolean dispenserPlaceBlocks = true;
 
     @Override
     public void onInitialize() {
@@ -22,14 +20,9 @@ public class CustomMod implements ModInitializer {
     }
 
     private void registerDispenserBehaviors() {
-        DispenserBehavior fallback = DispenserBlock.BEHAVIORS.get(Items.DIRT);
-
-        DispenserBlock.registerBehavior(Items.DIRT, new DispenserBehavior() {
+        DispenserBlock.registerBehavior(Items.DIRT, new ItemDispenserBehavior() {
             @Override
-            public ItemStack dispense(BlockPointer pointer, ItemStack stack) {
-                if (!dispenserPlaceBlocks) {
-                    return fallback != null ? fallback.dispense(pointer, stack) : stack;
-                }
+            public ItemStack dispenseSilently(BlockPointer pointer, ItemStack stack) {
                 ServerWorld world = pointer.world();
                 Direction facing = pointer.state().get(DispenserBlock.FACING);
                 BlockPos targetPos = pointer.pos().offset(facing);
@@ -39,7 +32,7 @@ public class CustomMod implements ModInitializer {
                     stack.decrement(1);
                     return stack;
                 }
-                return fallback != null ? fallback.dispense(pointer, stack) : stack;
+                return super.dispenseSilently(pointer, stack);
             }
         });
     }
