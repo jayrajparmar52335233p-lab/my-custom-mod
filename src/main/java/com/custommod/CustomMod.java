@@ -23,99 +23,31 @@ import net.minecraft.world.BlockView;
 
 public class CustomMod implements ModInitializer {
     public static final String MOD_ID = "custommod";
-    public static boolean dispenserPlaceBlocksEnabled = true;
-
-    public static final Block TREE_OBSERVER_BLOCK = new TreeObserverBlock(AbstractBlock.Settings.create().strength(3.5f));
-    public static final Item TREE_OBSERVER_ITEM = new BlockItem(TREE_OBSERVER_BLOCK, new Item.Settings());
+    public static boolean dispenserPlaceBlocks = true;
 
     @Override
     public void onInitialize() {
-        Registry.register(Registries.BLOCK, Identifier.of(MOD_ID, "tree_observer"), TREE_OBSERVER_BLOCK);
-        Registry.register(Registries.ITEM, Identifier.of(MOD_ID, "tree_observer"), TREE_OBSERVER_ITEM);
-
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            dispatcher.register(literal("dispenser")
-                .then(literal("place_blocks")
-                    .then(argument("enabled", BoolArgumentType.bool())
-                        .executes(context -> {
-                            dispenserPlaceBlocksEnabled = BoolArgumentType.getBool(context, "enabled");
-                            context.getSource().sendFeedback(() -> Text.literal("Dispenser Block Placement: " + dispenserPlaceBlocksEnabled), true);
-                            return 1;
-                        })
-                    )
-                )
-            );
-
-            dispatcher.register(literal("bot")
-                .then(literal("give")
-                    .then(argument("target", EntityArgumentType.player())
-                        .executes(context -> {
-                            ServerPlayerEntity bot = EntityArgumentType.getPlayer(context, "target");
-                            ServerPlayerEntity sender = context.getSource().getPlayer();
-                            if (sender != null && bot != null) {
-                                for (EquipmentSlot slot : EquipmentSlot.values()) {
-                                    ItemStack botItem = bot.getEquippedStack(slot);
-                                    if (!botItem.isEmpty()) {
-                                        sender.getInventory().insertStack(botItem.copy());
-                                        bot.equipStack(slot, ItemStack.EMPTY);
-                                    }
-                                }
-                            }
-                            return 1;
-                        })
-                    )
-                )
-            );
-        });
-
-        DispenserBlock.registerBehavior(Items.DIRT, new BlockPlacementBehavior());
-        DispenserBlock.registerBehavior(Items.COBBLESTONE, new BlockPlacementBehavior());
-        DispenserBlock.registerBehavior(Items.OAK_LOG, new BlockPlacementBehavior());
+        registerDispenserBehaviors();
     }
 
-    public static class BlockPlacementBehavior extends ItemDispenserBehavior {
-        @Override
-        public ItemStack dispenseSilently(BlockPointer pointer, ItemStack stack) {
-            if (!dispenserPlaceBlocksEnabled) return super.dispenseSilently(pointer, stack);
-            Direction direction = pointer.state().get(DispenserBlock.FACING);
-            BlockPos targetPos = pointer.pos().offset(direction);
-            ServerWorld world = pointer.world();
-
-            if (world.isAir(targetPos) && stack.getItem() instanceof BlockItem blockItem) {
-                world.setBlockState(targetPos, blockItem.getBlock().getDefaultState());
-                stack.decrement(1);
-                return stack;
-            }
-            return super.dispenseSilently(pointer, stack);
-        }
-    }
-
-    public static class TreeObserverBlock extends Block {
-        public TreeObserverBlock(Settings settings) { super(settings); }
-        @Override
-        public boolean emitsRedstonePower(BlockState state) { return true; }
-        @Override
-        public int getWeakRedstonePower(BlockState state, BlockView world, BlockPos pos, Direction direction) {
-            return hasLogNearby(world, pos) ? 15 : 0;
-        }
-        @Override
-        public int getStrongRedstonePower(BlockState state, BlockView world, BlockPos pos, Direction direction) {
-            return getWeakRedstonePower(state, world, pos, direction);
-        }
-
-        private boolean hasLogNearby(BlockView world, BlockPos pos) {
-            for (int dx = -2; dx <= 2; dx++) {
-                for (int dy = -2; dy <= 2; dy++) {
-                    for (int dz = -2; dz <= 2; dz++) {
-                        if (dx == 0 && dy == 0 && dz == 0) continue;
-                        BlockState targetState = world.getBlockState(pos.add(dx, dy, dz));
-                        Block targetBlock = targetState.getBlock();
-                        if (targetBlock instanceof LeavesBlock || targetBlock instanceof SaplingBlock || targetBlock instanceof TransparentBlock) continue;
-                        if (targetState.isIn(net.minecraft.registry.tag.BlockTags.LOGS)) return true;
-                    }
+    private void registerDispenserBehaviors() {
+        DispenserBlock.registerBehavior(Items.DIRT, new ItemDispenserBehavior() {
+            @Override
+            public ItemStack dispenseSilently(BlockPointer pointer, ItemStack stack) {
+                if (!dispenserPlaceBlocks) {
+                    return super.dispenseSilently(pointer, stack);
                 }
+                ServerWorld world = pointer.world();
+                Direction facing = pointer.state().get(DispenserBlock.FACING);
+                BlockPos targetPos = pointer.pos().offset(facing);
+
+                if (world.getBlockState(targetPos).isAir() && stack.getItem() instanceof BlockItem blockItem) {
+                    world.setBlockState(targetPos, blockItem.getBlock().getDefaultState());
+                    stack.decrement(1);
+                    return stack;
+                }
+                return super.dispenseSilently(pointer, stack);
             }
-            return false;
-        }
+        });
     }
-                  }
+}
