@@ -2,7 +2,6 @@ package com.redcarpet;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.DispenserBlock;
 import net.minecraft.block.dispenser.ItemDispenserBehavior;
@@ -23,10 +22,8 @@ public class RedCarpetMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // 1. डिस्पेंसर ब्लॉक प्लेसमेंट रजिस्टर करें
         registerDispenserBehaviors();
 
-        // 2. परमानेंट कमांड्स
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(CommandManager.literal("dispenser")
                 .then(CommandManager.literal("place")
@@ -61,7 +58,7 @@ public class RedCarpetMod implements ModInitializer {
                 Direction facing = pointer.state().get(DispenserBlock.FACING);
                 BlockPos targetPos = pointer.pos().offset(facing);
 
-                // Minecraft 1.21.11 का सही तरीका
+                // यहाँ 1.21.11 के लिए सही तरीका इस्तेमाल किया गया है
                 if (world.getBlockState(targetPos).isAir() && stack.getItem() instanceof BlockItem blockItem) {
                     world.setBlockState(targetPos, blockItem.getBlock().getDefaultState());
                     stack.decrement(1);
@@ -72,11 +69,10 @@ public class RedCarpetMod implements ModInitializer {
         });
     }
 
-    // ट्री ऑब्जर्वर चेकर लॉजिक (डर्ट के ऊपर लॉक्स चेक करने के लिए)
     public static boolean isTreeAbove(ServerWorld world, BlockPos pos) {
         BlockPos dirtPos = pos.up();
         BlockPos logPos = dirtPos.up();
         BlockState logState = world.getBlockState(logPos);
         return logState.isIn(BlockTags.LOGS);
     }
-                                    }
+}
